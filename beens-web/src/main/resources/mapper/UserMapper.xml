@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.UserMapper">
+    
+    <sql id="base_field">
+        u.`id` AS "id",
+        u.`username` AS "username",
+        u.`password` AS "password",
+        u.`name` AS "name",
+        u.`sex` AS "sex",
+        u.`head_img` AS "headImg",
+        u.`create_date` AS "createDate",
+        u.`update_date` AS "updateDate"
+    </sql>
+    
+	<select id="get" resultType="User">
+	    SELECT
+	    	<include refid="base_field"></include>
+	    FROM `user` u
+	    WHERE u.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="User">
+	    SELECT
+	    	<include refid="base_field"></include>
+	    FROM `user` u
+	    <where>
+	        <if test="username != null and username !=''">
+	            AND u.username = #{username}
+	        </if>
+	        <if test="password != null and password !=''">
+	            AND u.password = #{password}
+	        </if>
+	    </where>
+	    <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ORDER BY #{orderBy}
+            </when>
+            <otherwise>
+                ORDER BY u.create_date DESC
+            </otherwise>
+        </choose>
+	</select>
+	
+	<select id="getUserList" resultType="User">
+		SELECT
+	    	<include refid="base_field"></include>
+	    FROM `user` u
+	    <where>
+	        <if test="username != null and username !=''">
+	            AND u.username LIKE concat('%', #{username}, '%')
+	        </if>
+	        <if test="name != null and name !=''">
+	        	AND u.`name` LIKE concat('%', #{name}, '%')
+	        </if>
+	    </where>
+	    <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ORDER BY #{orderBy}
+            </when>
+            <otherwise>
+                ORDER BY u.create_date DESC
+            </otherwise>
+        </choose>
+	</select>
+	
+	<select id="insert">
+	    INSERT INTO `user`(
+	    	id,
+	    	username,
+	    	password,
+	    	name,
+	    	sex,
+	    	head_img,
+	    	create_date,
+	    	update_date
+	    ) VALUES (
+	    	#{id},
+	    	#{username},
+	    	#{password},
+	    	#{name},
+	    	#{sex},
+	    	#{headImg},
+	    	#{createDate},
+	    	#{updateDate}
+	    )
+	</select>
+	
+	<update id="updateUserInfo">
+		update `user`
+		SET 
+			name = #{name},
+			sex = #{sex},
+			head_img = #{headImg},
+			update_date = #{updateDate}
+		WHERE id = #{id}
+	</update>
+	
+	<delete id="delete">
+		DELETE FROM `user`
+		WHERE id = #{id}
+	</delete>
+	
+	<update id="updatePassword">
+		UPDATE `user` u
+		SET
+			u.`password`= #{newPassword}
+		WHERE u.id = #{userId} AND u.`password` = #{oldPassword}
+	</update>
+	
+</mapper>

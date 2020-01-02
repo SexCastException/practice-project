@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.OrderMapper">
+	<sql id="base_field">
+		o.id AS "id",
+		o.trade_no AS "tradeNo",
+		o.order_time AS "orderTime",
+		o.total_amount AS "totalAmount",
+		o.state AS "state",
+		o.user_id AS "user.id",
+		o.address_id AS "address.id",
+		o.user_del_flag AS "userDelFlag",
+		o.store_del_flag AS "storeDelFlag",
+		o.rider_del_flag AS "riderDelFlag",
+		o.create_date AS "createDate",
+		o.update_date AS "updateDate"
+	</sql>
+
+	<sql id="join_table">
+	</sql>
+
+	<select id="get" resultType="Order">
+		SELECT
+		<include refid="base_field"></include>,
+			u.username AS "user.username",
+			u.name AS "user.name",
+			u.sex AS "user.sex",
+			u.head_img AS "user.headImg",
+			a.adcode AS "address.adcode",
+			a.province AS "address.province",
+			a.city AS "address.city",
+			a.citycode AS "address.citycode",
+			a.district AS "address.district",
+			a.street AS "address.street",
+			a.street_number AS "address.streetNumber",
+			a.township AS "address.township",
+			a.detailed_address AS "address.detailedAddress",
+			a.longitude AS "address.longitude",
+			a.latitude AS "address.latitude",
+			a.phone AS "address.phone"
+		FROM `order` o
+		LEFT JOIN 	`user` u ON u.id = o.user_id
+		LEFT JOIN `address` a ON a.id = o.address_id
+		WHERE o.id = #{id}
+	</select>
+
+	<select id="findList" resultType="Order">
+		SELECT
+		<include refid="base_field"></include>,
+		u.username AS "user.username",
+		u.name AS "user.name",
+		u.sex AS "user.sex",
+		u.head_img AS "user.headImg",
+		a.adcode AS "address.adcode",
+		a.province AS "address.province",
+		a.city AS "address.city",
+		a.citycode AS "address.citycode",
+		a.district AS "address.district",
+		a.street AS "address.street",
+		a.street_number AS "address.streetNumber",
+		a.township AS "address.township",
+		a.detailed_address AS "address.detailedAddress",
+		a.longitude AS "address.longitude",
+		a.latitude AS "address.latitude",
+		a.phone AS "address.phone"
+		FROM `order` o
+		LEFT JOIN 	`user` u ON u.id = o.user_id
+		LEFT JOIN `address` a ON a.id = o.address_id
+		<where>
+			<if test="user != null">
+				<if test="user.id != null and user.id != ''">
+					AND o.user_id = #{user.id}
+				</if>
+				<if test="user.username != null and user.username != ''">
+					AND u.username LIKE concat('%',#{user.username},'%')
+				</if>
+			</if>
+		</where>
+		<choose>
+			<when test="orderBy != null and orderBy != ''">
+				ORDER BY #{orderBy}
+			</when>
+			<otherwise>
+				ORDER BY o.create_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+    	INSERT INTO `order` (
+			id,
+			trade_no,
+			order_time,
+			total_amount,
+			state,
+			user_id,
+			address_id,
+			user_del_flag,
+			store_del_flag,
+			rider_del_flag,
+			create_date,
+			update_date
+		)
+		VALUES
+		(
+			#{id},
+			#{tradeNo},
+			#{orderTime},
+			#{totalAmount},
+			#{state},
+			#{user.id},
+			#{address.id},
+			#{userDelFlag},
+			#{storeDelFlag},
+			#{riderDelFlag},
+			#{createDate},
+			#{updateDate}
+		)
+    </insert>
+
+	<update id="update">
+		UPDATE `order`
+    	SET
+    		`state` = #{state},
+    		`update_date` = #{updateDate}
+    	WHERE `id` = #{id}
+	</update>
+
+	<delete id="delete">
+		DELETE FROM `order`
+    	WHERE id = #{id}
+	</delete>
+
+</mapper>

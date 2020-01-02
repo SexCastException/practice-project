@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.AddressMapper">
+	<sql id="base_field">
+		id AS "id",
+		adcode AS "adcode",
+		province AS "province",
+		city AS "city",
+		citycode AS "citycode",
+		district AS "district",
+		street AS "street",
+		street_number AS "streetNumber",
+		township AS "township",
+		detailed_address AS "detailedAddress",
+		longitude AS "longitude",
+		latitude AS "latitude",
+		phone AS "phone",
+		user_id AS "user.id",
+		create_date AS "createDate",
+		update_date AS "updateDate"
+	</sql>
+	
+	<sql id="join_table">
+    </sql>
+    
+    <select id="get" resultType="Address">
+    	SELECT
+    		<include refid="base_field"></include>
+    	FROM `address`
+    	WHERE id = #{id}
+    </select>
+    
+    <select id="findList" resultType="Address">
+    	SELECT
+    		<include refid="base_field"></include>
+    	FROM `address`
+    	<where>
+    		<if test="user != null">
+    			<if test="user.id != null and user.id != ''">
+    				user_id = #{user.id}
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    
+    <insert id="insert">
+    	INSERT INTO address (
+    		id,
+			adcode,
+			province,
+			city,
+			citycode,
+			district,
+			street,
+			street_number,
+			township,
+			detailed_address,
+			longitude,
+			latitude,
+			phone,
+			user_id,
+			create_date,
+			update_date 
+    	) VALUES (
+    		#{id},
+    		#{adcode},
+    		#{province},
+    		#{city},
+    		#{citycode},
+    		#{district},
+    		#{street},
+    		#{streetNumber},
+    		#{township},
+    		#{detailedAddress},
+    		#{longitude},
+    		#{latitude},
+    		#{phone},
+    		#{user.id},
+    		#{createDate},
+    		#{updateDate}
+    	)
+    </insert>
+    
+    <update id="update">
+    	UPDATE address
+		SET
+			id = #{id},
+			adcode = #{adcode},
+			province = #{province},
+			city = #{city},
+			citycode = #{citycode},
+			district = #{district},
+			street = #{street},
+			street_number = #{streetNumber},
+			township = #{township},
+			detailed_address = #{detailedAddress},
+			longitude = #{longitude},
+			latitude = #{latitude},
+			phone = #{phone},
+			user_id = #{user.id}
+			create_date = #{createDate},
+			update_date = #{updateDate}
+    </update>
+    
+    <delete id="delete">
+    	DELETE FROM 
+    		address
+    	WHERE id = #{id}
+    </delete>
+</mapper>

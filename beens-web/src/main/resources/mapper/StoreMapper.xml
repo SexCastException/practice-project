@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.StoreMapper">
+    
+    <sql id="base_field">
+        s.id AS "id",
+        s.name AS "name",
+        s.introduce AS "introduce",
+        s.logo_url AS "logoUrl",
+        s.province AS "province",
+        s.city AS "city",
+        s.county AS "county",
+        s.town AS "town",
+        s.detailed_address AS "detailedAddress",
+        s.longitude AS "longitude",
+        s.latitude AS "latitude",
+        s.create_date AS "createDate",
+        s.update_date AS "updateDate"
+    </sql>
+    
+    <sql id="join_food_table">
+        LEFT JOIN food f ON f.store_id = s.id
+    </sql>
+    
+    <resultMap type="Store" id="storeMap">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="logoUrl" property="logoUrl" />
+        <result column="introduce" property="introduce" />
+        <result column="province" property="province" />
+        <result column="city" property="city" />
+        <result column="county" property="county" />
+        <result column="town" property="town" />
+        <result column="detailedAddress" property="detailedAddress" />
+        <result column="longitude" property="longitude" />
+        <result column="latitude" property="latitude" />
+        <result column="createDate" property="createDate" />
+        <result column="updateDate" property="updateDate" />
+    </resultMap>
+    
+    <resultMap type="Store" id="StoreFoodMap" extends="storeMap">
+        <collection property="foodList" ofType="Food">
+            <id column="foodId" property="id" />
+            <result column="foodName" property="name" />
+            <result column="foodIntroduce" property="introduce" />
+            <result column="originalPrice" property="originalPrice" />
+            <result column="currentPrice" property="currentPrice" />
+            <result column="repertory" property="repertory" />
+            
+            <collection property="imagesList" ofType="images">
+            	<id column="imageId" property="id" />
+            	<result column="imageUrl" property="url" />
+            	<result column="imageName" property="name" />
+            </collection>
+        </collection>
+    </resultMap>
+    
+    <select id="findList" resultMap="storeMap">
+        SELECT
+        	<include refid="base_field"></include>
+        FROM store s
+        <where>
+        	<if test="name != null and name != ''">
+                AND s.name LIKE concat('%', #{name}, '%')
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ORDER BY #{orderBy}
+            </when>
+            <otherwise>
+                ORDER BY s.create_date DESC
+            </otherwise>
+        </choose>
+    </select>
+    
+    <select id="get" resultMap="StoreFoodMap">
+        SELECT
+        	<include refid="base_field"></include>,
+        	f.id AS "foodId",
+        	f.name AS "foodName",
+        	f.introduce AS "foodIntroduce",
+        	f.original_price AS "originalPrice",
+        	f.current_price AS "currentPrice",
+        	f.repertory AS "repertory",
+        	i.id AS "imageId",
+        	i.url AS "imageUrl",
+        	i.name AS "imageName"
+        FROM store s
+        	<include refid="join_food_table"></include>
+        	LEFT JOIN (select * from images GROUP BY images.food_id) i on i.food_id = f.id
+        <where>
+            s.id = #{id}
+        </where>
+    </select>
+    
+    <insert id="insert">
+    	INSERT INTO `store`(
+	    	id,
+	    	name,
+	    	introduce,
+	    	logo_url,
+	    	province,
+	    	city,
+	    	county,
+	    	town,
+	    	detailed_address,
+	    	longitude,
+	    	latitude,
+	    	create_date,
+	    	update_date
+	    ) VALUES (
+	    	#{id},
+	    	#{name},
+	    	#{introduce},
+	    	#{logoUrl},
+	    	#{province},
+	    	#{city},
+	    	#{county},
+	    	#{town},
+	    	#{detailedAddress},
+	    	#{longitude},
+	    	#{latitude},
+	    	#{createDate},
+	    	#{updateDate}
+	    )
+    </insert>
+    
+    <update id="update">
+	    UPDATE `store`
+	    SET
+	    	`name` = #{name},
+	    	`introduce` = #{introduce},
+	    	`logo_url` = #{logoUrl},
+	    	`province` = #{province},
+	    	`city` = #{city},
+	    	`county` = #{county},
+	    	`town` = #{town},
+	    	`detailed_address` = #{detailedAddress},
+	    	`longitude` = #{longitude},
+	    	`latitude` = #{latitude},
+	    	`update_date` = #{updateDate}
+	    WHERE `id` = #{id}
+    </update>
+    
+    <delete id="delete">
+    	DELETE FROM `store`
+    	WHERE id = #{id}
+    </delete>
+
+    <select id="storeComment" resultType="cn.huazai123.maven.web.entity.Store">
+        SELECT
+            <include refid="base_field"></include>
+        FROM store s
+        LEFT JOIN food f ON f.store_id = s.id
+        GROUP BY f.store_id
+        ORDER BY SUM(f.sell_num) DESC LIMIT 3
+    </select>
+    
+</mapper>

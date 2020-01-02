@@ -1,0 +1,61 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd ">
+		
+    <context:component-scan base-package="cn.huazai123.maven.web.controller"></context:component-scan>
+    <context:component-scan base-package="cn.huazai123.maven.web.api"></context:component-scan>
+    
+    <mvc:annotation-driven conversion-service="conversionService"></mvc:annotation-driven>
+    <!-- <mvc:message-converters>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"></bean>
+    </mvc:message-converters> -->
+    
+    
+    <!-- 参数转换器 -->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <list>
+                <!-- 字符-日期转换器 -->
+                <bean class="cn.huazai123.maven.web.convert.StringToDateConvert"></bean>
+            </list>
+        </property>
+    </bean>
+    
+    <!-- 配置视图解析器 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+    
+    <!-- 配置多部分文件上传解析器 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    	<property name="defaultEncoding" value="UTF-8"></property>
+    </bean>
+    
+    <mvc:default-servlet-handler/>
+    <mvc:resources location="/static" mapping="/**"/>
+    
+    <bean class="cn.huazai123.maven.web.exception.GlobalHandlerExceptionResolver"></bean>
+    
+    <import resource="classpath:config/spring-shiro.xml"/>
+    <import resource="classpath:config/spring-dao.xml"/>
+    <import resource="classpath:config/spring-service.xml"/>
+    
+    <!-- <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="cn.huazai123.maven.web.interceptor.IndexUrlInterceptor"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors> -->
+</beans>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.CategoryMapper">
+    
+    <sql id="base_field">
+        c.`id` AS "id",
+        c.`name` AS "name",
+        c.`parent_category_id` AS "parentCategory.id", 
+        c.`create_date` AS "createDate",
+        c.`update_date` AS "updateDate"
+    </sql>
+    
+	<select id="get" resultType="Category">
+	    SELECT
+	    	<include refid="base_field"></include>
+	    FROM `category` c WHERE c.id = #{id}
+	</select>
+	
+	<select id="insert">
+	    INSERT INTO `category`(
+	    	id,
+	    	name,
+	    	parent_category_id,
+	    	create_date,
+	    	update_date
+	    ) VALUES (
+	 	  	#{id},
+	    	#{name},
+	    	#{parentCategory.id},
+	    	#{createDate},
+	    	#{updateDate}
+	    )
+	</select>
+	
+	<resultMap type="Category" id="categoryMap">
+	    <id column="id" property="id" />
+	    <result column="name" property="name" />
+	    <result column="parentCategory.id" property="parentCategory.id" />
+	    <result column="createDate" property="createDate" />
+	    <result column="updateDate" property="updateDate" />
+	    
+	    <collection property="categoryList" ofType="Category">
+	        <id column="subId" property="id" />
+	        <result column="subName" property="name" />
+	        <result column="pci" property="parentCategory.id" />
+	    </collection>
+	</resultMap>
+	
+	<select id="findList" resultMap="categoryMap">
+	    SELECT
+	    	<include refid="base_field"></include>,
+	    	category.`id` AS "subId",
+	    	category.`name` AS "subName",
+	    	category.`parent_category_id` AS "pci"
+	    FROM `category` c
+	    LEFT JOIN category ON category.parent_category_id = c.id
+	    <where>
+	         c.parent_category_id IS NULL
+	    </where>
+	</select>
+	
+	<select id="getChildList" resultType="Category">
+		SELECT <include refid="base_field"></include>,
+		c2.id AS "parentCategory.id",
+		c2.name AS "parentCategory.name"
+		FROM `category` c
+		LEFT JOIN `category` c2 ON c2.id = c.parent_category_id
+		WHERE c.parent_category_id IS NOT NULL
+	</select>
+	
+	<resultMap type="Category" id="categoryChildMap">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="createDate" property="createDate" />
+        <result column="updateDate" property="updateDate" />
+        <collection property="categoryList" ofType="Category">
+        	<id column="childId" property="id" />
+			<result column="childName" property="name" />
+        </collection>
+	</resultMap>
+	
+	<select id="getParentList" resultMap="categoryChildMap">
+		SELECT
+			<include refid="base_field"></include>,
+			c2.id AS "childId",
+			c2.name AS "childName"
+		FROM `category` c LEFT JOIN `category` c2 ON c2.parent_category_id = c.id
+		WHERE c.parent_category_id IS NULL
+	</select>
+	
+</mapper>

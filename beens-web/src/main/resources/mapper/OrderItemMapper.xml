@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.OrderItemMapper">
+	<sql id="base_field">
+		oi.id AS "id",
+		oi.actual_price AS "actualPrice",
+		oi.current_price AS "currentPrice",
+		oi.number AS "number",
+		oi.food_id AS "food.id",
+		oi.order_id AS "order.id",
+		oi.create_date AS "createDate",
+		oi.update_date AS "updateDate"
+	</sql>
+	
+	<sql id="join_table">
+    </sql>
+    
+    <select id="get" resultType="OrderItem">
+    	SELECT
+    		<include refid="base_field"></include>
+    	FROM `order_item` oi
+    	WHERE oi.id = #{id}
+    </select>
+    
+    <resultMap type="OrderItem" id="orderItemMap">
+    	<id column="id" property="id" />
+    	<result column="actualPrice" property="actualPrice" />
+    	<result column="currentPrice" property="currentPrice" />
+    	<result column="number" property="number" />
+    	<result column="createDate" property="createDate" />
+    	<result column="updateDate" property="updateDate" />
+    	
+    	<association property="food" javaType="Food">
+    		<id column="foodId" property="id" />
+    		<result column="foodName" property="name" />
+    		<result column="foodIntroduce" property="introduce" />
+    		<result column="foodOriginalPrice" property="originalPrice" />
+    		<result column="foodCurrentPrice" property="currentPrice" />
+    		<result column="foodRepertory" property="repertory" />
+    		<result column="foodSellNum" property="sellNum" />
+    		<result column="foodBrowserNum" property="browserNum" />
+    		<result column="storeId" property="store.id" />
+    		
+    		<collection property="imagesList" ofType="Images">
+    			<id column="imageId" property="id" />
+    			<result column="imageUrl" property="url" />
+    			<result column="imageName" property="name" />
+    		</collection>
+    	</association>
+    </resultMap>
+    
+    <select id="findList" resultMap="orderItemMap">
+    	SELECT
+    		<include refid="base_field"></include>,
+    		f.id AS "foodId",
+			f.`name` AS "foodName",
+			f.introduce AS "foodIntroduce",
+			f.original_price AS "foodOriginalPrice",
+			f.current_price AS "foodCurrentPrice",
+			f.repertory AS "foodRepertory",
+			f.sell_num AS "foodSellNum",
+			f.browser_num AS "foodBrowserNum",
+			f.store_id AS "storeId",
+			i.id AS "imageId",
+			i.url AS "imageUrl",
+			i.`name` AS "imageName"
+    	FROM `order_item` oi
+    	LEFT JOIN `food` f ON f.id = oi.food_id
+    	LEFT JOIN `images` i ON i.food_id = f.id
+    	<where>
+    		<if test="order != null">
+    			<if test="order.id != null and order.id != ''">
+    				AND oi.order_id = #{order.id}
+    			</if>
+    		</if>
+    	</where>
+    </select>
+    
+    <insert id="insert">
+    	INSERT INTO `order_item` (
+			id,
+			actual_price,
+			current_price,
+			`number`,
+			food_id,
+			order_id,
+			create_date,
+			update_date
+		)
+		VALUES
+		(
+			#{id},
+			#{actualPrice},
+			#{currentPrice},
+			#{number},
+			#{food.id},
+			#{order.id},
+			#{createDate},
+			#{updateDate}
+		)
+    </insert>
+    
+    <insert id="batchInsert">
+            INSERT INTO `order_item` (
+				id,
+				actual_price,
+				current_price,
+				`number`,
+				food_id,
+				order_id,
+				create_date,
+				update_date
+			)
+			VALUES
+			<foreach collection="list" item="orderItem" separator=",">
+				(
+					#{orderItem.id},
+					#{orderItem.actualPrice},
+					#{orderItem.currentPrice},
+					#{orderItem.number},
+					#{orderItem.food.id},
+					#{orderItem.order.id},
+					#{orderItem.createDate},
+					#{orderItem.updateDate}
+				)
+        	</foreach>
+		
+    </insert>
+    
+</mapper>

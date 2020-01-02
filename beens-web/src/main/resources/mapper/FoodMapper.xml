@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.FoodMapper">
+    <sql id="base_field">
+        f.id AS "id",
+        f.name AS "name",
+        f.introduce AS "introduce",
+        f.original_price AS "originalPrice",
+        f.current_price AS "currentPrice",
+        f.repertory AS "repertory",
+        f.sell_num AS "sellNum",
+        f.browser_num AS "browserNum",
+        f.create_date AS "createDate",
+        f.update_date AS "updateDate"
+    </sql>
+    
+    <sql id="join_images_table">
+        LEFT JOIN images i ON i.food_id = f.id
+    </sql>
+    <sql id="join_store_table">
+        LEFT JOIN store s ON s.id = f.store_id
+    </sql>
+    <sql id="join_category_table">
+        LEFT JOIN category c ON c.id = f.category_id
+    </sql>
+    
+    <resultMap type="Food" id="foodMap">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="introduce" property="introduce" />
+        <result column="originalPrice" property="originalPrice" />
+        <result column="currentPrice" property="currentPrice" />
+        <result column="repertory" property="repertory" />
+        <result column="sellNum" property="sellNum" />
+        <result column="browserNum" property="browserNum" />
+        <result column="createDate" property="createDate" />
+        <result column="updateDate" property="updateDate" />
+    </resultMap>
+    
+    <resultMap type="Food" id="foodImagesMap" extends="foodMap">
+        <collection property="imagesList" ofType="Images">
+            <id column="imagesId" property="id" />
+            <result column="url" property="url" />
+            <result column="imagesName" property="name" />
+        </collection>
+    </resultMap>
+    
+    <resultMap type="Food" id="foodStoreMap" extends="foodImagesMap">
+        <association property="store" javaType="Store">
+            <id column="storeId" property="id" />
+            <result column="storeName" property="name" />
+            <result column="storeIntroduce" property="introduce" />
+            <result column="logoUrl" property="logoUrl" />
+            <result column="province" property="province" />
+            <result column="city" property="city" />
+            <result column="county" property="county" />
+            <result column="town" property="town" />
+            <result column="detailedAddress" property="detailedAddress" />
+            <result column="longitude" property="longitude" />
+            <result column="latitude" property="latitude" />
+        </association>
+    </resultMap>
+    
+    <resultMap type="Food" id="foodAllMap" extends="foodStoreMap">
+    	<association property="category" javaType="Category">
+    		<id column="categoryId" property="id" />
+            <result column="categoryName" property="name" />
+    	</association>
+    </resultMap>
+    
+    <select id="findList" resultMap="foodImagesMap">
+        SELECT
+        	<include refid="base_field"></include>,
+        	i.id AS "imagesId",
+        	i.url AS "url",
+        	i.name AS "imagesName"
+        FROM `food` f
+        	<include refid="join_images_table"></include>
+        <where>
+            <if test="name != null and name != ''">
+                AND f.name LIKE concat('%', #{name}, '%')
+            </if>
+            <if test="category != null">
+                <if test="category.id != null and category.id != ''">
+                    AND f.category_id = #{category.id}
+                </if>
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ORDER BY #{orderBy}
+            </when>
+            <otherwise>
+                ORDER BY f.create_date DESC
+            </otherwise>
+        </choose>
+    </select>
+    
+    <select id="findFoodListNoJoint" resultMap="foodMap">
+    	SELECT
+        	<include refid="base_field"></include>
+        FROM `food` f
+        <where>
+            <if test="name != null and name != ''">
+                AND f.name LIKE concat('%', #{name}, '%')
+            </if>
+            <if test="category != null">
+                <if test="category.id != null and category.id != ''">
+                    AND f.category_id = #{category.id}
+                </if>
+            </if>
+            <if test="store != null">
+                <if test="store.id != null and store.id != ''">
+                    AND f.store_id = #{store.id}
+                </if>
+            </if>
+        </where>
+        ORDER BY f.create_date DESC
+    </select>
+    
+    <select id="get" resultMap="foodAllMap">
+        SELECT
+        	<include refid="base_field"></include>,
+        	i.id AS "imagesId",
+        	i.url AS "url",
+        	i.name AS "imagesName",
+        	s.id AS "storeId",
+        	s.name AS "storeName",
+        	s.introduce AS "storeIntroduce",
+        	s.logo_url AS "logoUrl",
+        	s.province AS "province",
+        	s.city AS "city",
+        	s.county AS "county",
+        	s.town AS "town",
+        	s.detailed_address AS "detailedAddress",
+        	s.longitude AS "longitude",
+        	s.latitude AS "latitude",
+        	c.id AS "categoryId",
+        	c.`name` AS "categoryName"
+        FROM `food` f
+        	<include refid="join_images_table"></include>
+        	<include refid="join_store_table"></include>
+        	<include refid="join_category_table"></include>
+        <where>
+            f.id = #{id}
+        </where>
+    </select>
+    
+    <select id="webRecommend" resultMap="foodImagesMap">
+    	SELECT
+        	<include refid="base_field"></include>,
+        	i.id AS "imagesId",
+        	i.url AS "url",
+        	i.name AS "imagesName"
+        FROM `food` f
+        LEFT JOIN
+        	(select * from images GROUP BY images.food_id) i on i.food_id = f.id
+        ORDER BY f.sell_num DESC,f.browser_num DESC,f.current_price
+        LIMIT 3
+    </select>
+    
+    <update id="batchUpdateInfo">
+        UPDATE `food`
+		<trim prefix="SET" suffixOverrides=",">
+            <trim prefix="repertory = case" suffix="end,">
+                <foreach collection="list" item="food">
+                       when id=#{food.id} then #{food.repertory}
+                </foreach>
+            </trim>
+            
+            <trim prefix="sell_num = case" suffix="end,">
+                <foreach collection="list" item="food">
+                       when id=#{food.id} then #{food.sellNum}
+                </foreach>
+            </trim>
+    	</trim>
+    	<where>
+            <foreach collection="list" separator="or" item="food">
+                id = #{food.id}
+            </foreach>
+        </where>
+    </update>
+    
+    <select id="getFoodAssociationList" resultType="Food">
+    	SELECT
+        	<include refid="base_field"></include>,
+        	c.id AS "category.id",
+        	c.`name` AS "category.name",
+        	s.`id` AS "store.id",
+        	s.`name` AS "store.name",
+        	s.`introduce` AS "store.introduce",
+        	s.`logo_url` AS "store.logoUrl"
+        FROM `food` f
+        LEFT JOIN `category` c ON c.id = f.category_id
+        LEFT JOIN `store` s ON s.id = f.store_id
+        <where>
+            <if test="name != null and name != ''">
+                AND f.name LIKE concat('%', #{name}, '%')
+            </if>
+            <if test="category != null">
+                <if test="category.id != null and category.id != ''">
+                    AND f.category_id = #{category.id}
+                </if>
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy != null and orderBy != ''">
+                ORDER BY #{orderBy}
+            </when>
+            <otherwise>
+                ORDER BY f.create_date DESC
+            </otherwise>
+        </choose>
+    </select>
+    
+    <insert id="insert">
+    	INSERT INTO `food`(
+	    	id,
+	    	name,
+	    	introduce,
+	    	original_price,
+	    	current_price,
+	    	repertory,
+	    	sell_num,
+	    	browser_num,
+	    	category_id,
+	    	store_id,
+	    	create_date,
+	    	update_date
+	    ) VALUES (
+	    	#{id},
+	    	#{name},
+	    	#{introduce},
+	    	#{originalPrice},
+	    	#{currentPrice},
+	    	#{repertory},
+	    	#{sellNum},
+	    	#{browserNum},
+	    	#{category.id},
+	    	#{store.id},
+	    	#{createDate},
+	    	#{updateDate}
+	    )
+    </insert>
+    
+    <update id="update">
+    	UPDATE `food`
+    	SET
+    		`name` = #{name},
+    		`introduce` = #{introduce},
+    		`original_price` = #{originalPrice},
+    		`current_price` = #{currentPrice},
+    		`repertory` = #{repertory},
+    		`sell_num` = #{sellNum},
+    		`browser_num` = #{browserNum},
+    		`category_id` = #{category.id},
+    		`store_id` = #{store.id},
+    		`update_date` = #{updateDate}
+    	WHERE `id` = #{id}
+    </update>
+    
+    <delete id="delete">
+    	DELETE FROM `food`
+    	WHERE id = #{id}
+    </delete>
+    
+    <update id="updateBrowserNum">
+    	UPDATE `food` f 
+    	SET
+    		f.browser_num=f.browser_num+1
+    	WHERE
+    		f.id NOT IN(SELECT food_id FROM browse b WHERE b.user_id = #{userId}) AND f.id IN (#{foodId})
+    </update>
+    
+</mapper>

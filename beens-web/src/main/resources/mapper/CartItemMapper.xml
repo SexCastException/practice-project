@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.CartItemMapper">
+    <sql id="base_field">
+        ci.id AS "id",
+		ci.number AS "number",
+		ci.food_id AS "food.id",
+		ci.cart_id AS "shoppingCart.id",
+		ci.create_date AS "createDate",
+		ci.update_date AS "updateDate"
+    </sql>
+    
+    <sql id="join_table">
+        LEFT JOIN food f ON f.id = ci.food_id
+        LEFT JOIN shopping_cart sc ON sc.id = ci.cart_id
+    </sql>
+    
+    <select id="get" resultType="CartItem">
+        SELECT
+        	<include refid="base_field"></include>
+        FROM cart_item ci
+        WHERE ci.id = #{id}
+    </select>
+    
+    <select id="findList" resultType="CartItem">
+        SELECT
+        	<include refid="base_field"></include>
+        FROM cart_item ci
+        	<include refid="join_table"></include>
+        <where>
+            <if test="shoppingCart != null">
+                <if test="shoppingCart.id != null and shoppingCart.id != ''">
+                    AND ci.cart_id = #{shoppingCart.id}
+                </if>
+            </if>
+            <if test="food != null">
+                <if test="food.id != null and food.id != ''">
+                    AND ci.food_id = #{food.id}
+                </if>
+            </if>
+        </where>
+    </select>
+    
+    <insert id="insert">
+        INSERT INTO `cart_item` (
+			id,
+			number,
+			cart_id,
+			food_id,
+			create_date,
+			update_date
+		) VALUES (
+			#{id},
+			#{number},
+			#{shoppingCart.id},
+			#{food.id},
+			#{createDate},
+			#{updateDate}
+		)
+    </insert>
+    
+    <update id="update">
+        UPDATE cart_item
+		SET
+			number = #{number},
+ 			cart_id = #{shoppingCart.id},
+ 			food_id = #{food.id},
+ 			create_date = #{createDate},
+ 			update_date = #{updateDate}
+		WHERE
+			id = #{id}
+    </update>
+    
+    <update id="updateNumber">
+        UPDATE cart_item
+        SET
+        	number = #{number}
+		WHERE
+			id = #{id}
+    </update>
+    
+    <delete id="delete">
+        DELETE FROM
+			cart_item
+		WHERE id = #{id}
+    </delete>
+    
+    <delete id="batchDelete">
+    	DELETE FROM 
+    		`cart_item`
+    	WHERE id IN
+    	<foreach collection="list" item="id" open="(" separator="," close=")">
+    	    #{id}
+    	</foreach>
+    </delete>
+    
+    <resultMap type="CartItem" id="goodsComfirmMap">
+        <id column="cartItemId" property="id" />
+        <result column="number" property="number" />
+        <result column="cartItemCreateDate" property="createDate" />
+        
+        <association property="food" javaType="food">
+            <id column="foodId" property="id" />
+            <result column="foodName" property="name" />
+            <result column="introduce" property="introduce" />
+            <result column="originalPrice" property="originalPrice" />
+            <result column="currentPrice" property="currentPrice" />
+            <result column="repertory" property="repertory" />
+            <result column="sellNum" property="sellNum" />
+            <result column="browserNum" property="browserNum" />
+            <result column="storeId" property="store.id" />
+            
+            <collection property="imagesList" ofType="Images">
+	            <id column="imageId" property="id" />
+	            <result column="imageName" property="name" />
+	            <result column="imageUrl" property="url" />
+        	</collection>
+        	
+        </association>
+    </resultMap>
+    
+    <select id="goodsComfirm" resultMap="goodsComfirmMap">
+        SELECT
+        	ci.id AS "cartItemId",
+			ci.number AS "number",
+			ci.create_date AS "cartItemCreateDate",
+        	f.id AS "foodId",
+			f.`name` AS "foodName",
+			f.introduce AS "introduce",
+			f.original_price AS "originalPrice",
+			f.current_price AS "currentPrice",
+			f.repertory AS "repertory",
+			f.sell_num AS "sellNum",
+			f.browser_num AS "browserNum",
+			f.store_id AS "storeId",
+			i.id AS "imageId",
+			i.`name` AS "imageName",
+			i.url AS "imageUrl"
+		FROM cart_item ci
+		LEFT JOIN food f ON f.id = ci.food_id
+		LEFT JOIN images i ON i.food_id = f.id
+		WHERE ci.id IN
+		<foreach collection="list" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+    </select>
+    
+</mapper>

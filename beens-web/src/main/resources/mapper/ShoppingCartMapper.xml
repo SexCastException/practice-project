@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.huazai123.maven.web.mapper.ShoppingCartMapper">
+    
+    <sql id="base_field">
+        cart.id AS "id",
+        cart.create_date AS "createDate",
+        cart.update_date AS "updateDate"
+    </sql>
+    
+    <sql id="join_table">
+        LEFT JOIN cart_item ci ON ci.cart_id = cart.id
+		LEFT JOIN food f ON f.id = ci.food_id
+		LEFT JOIN images img ON img.food_id = f.id
+    </sql>
+    
+    <resultMap type="ShoppingCart" id="cartMapper">
+        <id column="id" property="id" />
+        <result column="createDate" property="createDate" />
+        <result column="updateDate" property="updateDate" />
+        
+        <collection property="cartItemList" ofType="CartItem">
+            <id column="cartItemId" property="id" />
+            <result column="number" property="number" />
+            
+            <association property="food" javaType="Food">
+                <id column="foodId" property="id" />
+                <result column="foodName" property="name" />
+                <result column="introduce" property="introduce" />
+                <result column="originalPrice" property="originalPrice" />
+                <result column="currentPrice" property="currentPrice" />
+                <result column="repertory" property="repertory" />
+                
+                <collection property="imagesList" ofType="Images">
+                    <id column="imgId" property="id" />
+                    <result column="url" property="url" />
+                    <result column="imgName" property="name" />
+                </collection>
+            </association>
+        </collection>
+    </resultMap>
+    
+    <select id="get" resultMap="cartMapper">
+        SELECT
+        	<include refid="base_field"></include>,
+        	ci.id AS "cartItemId",
+        	ci.number AS "number",
+        	f.id AS "foodId",
+        	f.name AS "foodName",
+        	f.introduce AS "introduce",
+        	f.original_price AS "originalPrice",
+        	f.current_price AS "currentPrice",
+        	f.repertory AS "repertory",
+        	img.id AS "imgId",
+        	img.url AS "url",
+        	img.name AS "imgName"
+        	
+        FROM shopping_cart cart
+        	<include refid="join_table"></include>
+        where cart.id = #{id}
+        ORDER BY ci.create_date DESC
+    </select>
+    
+    <insert id="insert">
+        INSERT INTO shopping_cart VALUES (
+	        #{id},
+	        #{createDate},
+	        #{updateDate}
+        )
+    </insert>
+    
+</mapper>
