@@ -10,7 +10,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven.compiler.encoding>UTF-8</maven.compiler.encoding>
 		<shiro.version>1.2.2</shiro.version>
-		<springmvc.version>4.3.10.RELEASE</springmvc.version>
+		<springmvc.version>5.2.2.RELEASE</springmvc.version>
 		<aspect.version>1.8.10</aspect.version>
 	</properties>
   
